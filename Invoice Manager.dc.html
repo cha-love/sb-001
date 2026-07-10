@@ -35,7 +35,12 @@
   <div style="width:168px;flex-shrink:0;background:oklch(0.23 0.025 260);color:oklch(0.85 0.01 260);display:flex;flex-direction:column;padding:18px 0">
     <div style="padding:0 20px 18px;font-size:13px;font-weight:700;color:#fff;letter-spacing:-0.2px">청구관리시스템</div>
     <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="2">
-      <div style="{{ n.style }}" onClick="{{ n.onClick }}">{{ n.label }}</div>
+      <div style="{{ n.style }}" onClick="{{ n.onClick }}">
+        <div>{{ n.label }}</div>
+        <sc-if value="{{ n.subtitle }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ n.subtitleStyle }}">{{ n.subtitle }}</div>
+        </sc-if>
+      </div>
     </sc-for>
   </div>
 
@@ -68,7 +73,7 @@
         <option value="전체">청구상태 전체</option>
         <option value="완료">완료</option>
         <option value="미청구">미청구</option>
-        <option value="연체">연 체</option>
+        <option value="연체">연체</option>
       </select>
       <select style="{{ filterSelectStyle }}"><option>금액확인 전체</option></select>
       <div style="flex:1"></div>
@@ -80,7 +85,12 @@
 
     <div style="max-height:240px;flex-shrink:0;overflow-y:auto;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
       <div style="{{ tableHeaderStyle }}">
-        <div>No.</div><div>사업자번호</div><div style="width: 312px">거래처명</div><div>담당자</div><div>연락처</div><div>계약상품</div><div>청구월</div><div>발행일</div><div>청구일</div><div>CMS청구</div><div>청구상태</div><div style="text-align:right">합계금액</div><div>입금상태</div><div>금액확인</div>
+        <sc-for list="{{ tableHeaderCells }}" as="h" hint-placeholder-count="13">
+          <div style="{{ h.cellStyle }}" onClick="{{ h.onClick }}">
+            <span>{{ h.label }}</span>
+            <span style="{{ h.arrowStyle }}">{{ h.arrow }}</span>
+          </div>
+        </sc-for>
       </div>
       <sc-for list="{{ tableRows }}" as="r" hint-placeholder-count="8">
         <div style="{{ r.rowStyle }}" onClick="{{ r.onSelect }}">
@@ -93,11 +103,9 @@
           <div>{{ r.billMonth }}</div>
           <div>{{ r.issueDay }}</div>
           <div>{{ r.billingDay }}</div>
-          <div>{{ r.cmsBilling }}</div>
           <div>{{ r.statusLabel }}</div>
           <div style="text-align:right;font-weight:700">{{ r.amountLabel }}</div>
           <div>{{ r.depositStatus }}</div>
-          <div>{{ r.confirmedLabel }}</div>
         </div>
       </sc-for>
       <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
@@ -158,22 +166,24 @@
     </div>
 
     <div style="height:282px;flex-shrink:0;overflow:auto;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
-      <div style="min-width:1180px">
+      <div>
         <div style="{{ licTableHeaderStyle }}">
-          <div>등록일자</div><div>등록수량</div><div>등록구분</div><div>등록업체</div><div>사업자번호</div><div>거래처명</div><div>계약상품</div><div>청구전월서비스금액</div><div>청구월 서비스금액</div><div>발행일</div><div>청구일</div>
+          <sc-for list="{{ licTableHeaderCells }}" as="h" hint-placeholder-count="8">
+            <div style="{{ h.cellStyle }}" onClick="{{ h.onClick }}">
+              <span>{{ h.label }}</span>
+              <span style="{{ h.arrowStyle }}">{{ h.arrow }}</span>
+            </div>
+          </sc-for>
         </div>
         <sc-for list="{{ licTableRows }}" as="lr" hint-placeholder-count="4">
           <div style="{{ lr.rowStyle }}" onClick="{{ lr.onSelect }}">
-            <div>{{ lr.regDate }}</div>
-            <div>{{ lr.qty }}</div>
             <div style="{{ lr.regTypeStyle }}">{{ lr.regType }}</div>
             <div>{{ lr.registerCompany }}</div>
+            <div>{{ lr.regDate }}</div>
             <div>{{ lr.bizNo }}</div>
             <div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ lr.name }}</div>
             <div>{{ lr.product }}</div>
-            <div style="text-align:right">{{ lr.prevAmount }}</div>
-            <div style="{{ lr.currAmountStyle }}">{{ lr.currAmount }}</div>
-            <div>{{ lr.issueDay }}</div>
+            <div style="{{ lr.billAmountStyle }}">{{ lr.billAmount }}</div>
             <div>{{ lr.billingDay }}</div>
           </div>
         </sc-for>
@@ -197,7 +207,321 @@
     </div>
     </sc-if>
 
-    <div style="display:flex;align-items:stretch;min-height:640px">
+    <sc-if value="{{ isMenuUsageCheck }}" hint-placeholder-val="{{ false }}">
+    <div>
+    <div style="height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
+      <div style="font-size:16px;font-weight:700">종량제 서비스 확인</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:12px;font-weight:600;color:oklch(0.5 0.012 255)">최근검색일자: {{ usageCheckLastSearch }}</span>
+        <button style="{{ ghostBtnStyle }}" onClick="{{ onExcelUsageCheck }}">엑셀다운로드</button>
+      </div>
+    </div>
+
+    <div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:16px 20px;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button style="{{ searchBtnStyle }}" onClick="{{ onSearchUsageCheck }}">검색</button>
+        <span style="font-size:12.5px;color:oklch(0.4 0.012 255)">검색월: <strong>{{ usageCheckMonthLabel }}</strong> (항상 전월 데이터를 검색합니다)</span>
+      </div>
+      <div style="font-size:11.5px;color:oklch(0.6 0.012 255);line-height:1.5">검색 버튼을 누르면 전월의 종량제 서비스(SMS·LMS·카카오알림톡·AI토큰) 사용량을 가져옵니다. 가져온 데이터는 거래처관리 화면의 청구 계산에 그대로 활용되며, 다시 검색하면 최근검색일자가 오늘 날짜로 갱신됩니다.</div>
+    </div>
+
+    <div style="height:800px;flex-shrink:0;overflow:auto;background:#fff">
+      <div>
+        <div style="{{ usageCheckGridHeaderStyle }}">
+          <sc-for list="{{ usageCheckHeaderCells }}" as="h" hint-placeholder-count="9">
+            <div style="{{ h.cellStyle }}" onClick="{{ h.onClick }}">
+              <span>{{ h.label }}</span>
+              <span style="{{ h.arrowStyle }}">{{ h.arrow }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <sc-for list="{{ usageCheckRows }}" as="ur" hint-placeholder-count="12">
+          <div style="{{ ur.rowStyle }}">
+            <div>{{ ur.no }}</div>
+            <div>{{ ur.monthLabel }}</div>
+            <div>{{ ur.bizNo }}</div>
+            <div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ur.name }}</div>
+            <div>{{ ur.product }}</div>
+            <div>{{ ur.sms }}</div>
+            <div>{{ ur.lms }}</div>
+            <div>{{ ur.kakao }}</div>
+            <div>{{ ur.aiToken }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="height:36px;flex-shrink:0;display:flex;align-items:center;padding:0 20px;background:#fff;border-top:1px solid oklch(0.9 0.006 250);font-size:12px;color:oklch(0.5 0.012 255)">
+      <div>전체 {{ usageCheckTotalCount }}건</div>
+    </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isMenuSettings }}" hint-placeholder-val="{{ false }}">
+    <div>
+    <div style="height:52px;flex-shrink:0;display:flex;align-items:center;padding:0 20px;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
+      <div style="font-size:16px;font-weight:700">설정관리</div>
+    </div>
+
+    <div style="display:flex;align-items:stretch;min-height:560px">
+      <div style="width:180px;flex-shrink:0;padding:16px 12px;background:oklch(0.98 0.003 250);border-right:1px solid oklch(0.9 0.006 250);display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ settingsTabs }}" as="t" hint-placeholder-count="6">
+          <div style="{{ t.style }}" onClick="{{ t.onClick }}">{{ t.label }}</div>
+        </sc-for>
+      </div>
+
+      <div style="flex:1;overflow:auto;padding:20px;background:oklch(0.98 0.003 250);min-width:0">
+
+        <sc-if value="{{ settingsIsPriceTab }}" hint-placeholder-val="{{ true }}">
+          <div style="max-width:760px">
+            <div style="{{ settingsCardStyle }}margin-bottom:16px">
+              <div style="{{ settingsCardTitleStyle }}">{{ settingsActiveCard.title }} 추가</div>
+              <div style="padding:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input style="{{ settingsInputStyle }}flex:1;min-width:140px" placeholder="항목명" value="{{ settingsActiveCard.newName }}" onChange="{{ settingsActiveCard.onNameChange }}">
+                <input style="{{ settingsInputStyle }}width:120px" placeholder="단가 (원)" value="{{ settingsActiveCard.newPrice }}" onChange="{{ settingsActiveCard.onPriceChange }}">
+                <sc-if value="{{ settingsActiveCard.isUsage }}" hint-placeholder-val="{{ false }}">
+                  <input style="{{ settingsInputStyle }}width:90px" placeholder="단위" value="{{ settingsActiveCard.newUnit }}" onChange="{{ settingsActiveCard.onUnitChange }}">
+                </sc-if>
+                <button style="{{ settingsAddBtnStyle }}" onClick="{{ settingsActiveCard.onAdd }}">+ 추가</button>
+              </div>
+            </div>
+
+            <div style="{{ settingsCardStyle }}">
+              <div style="{{ settingsCardTitleStyle }}">설정 항목 목록</div>
+              <div style="{{ settingsTableHeaderStyle }}"><div>구분</div><div>항목명</div><div style="text-align:right">단가</div><div>단위/유형</div><div style="text-align:center">선택</div></div>
+              <sc-for list="{{ settingsTableRows }}" as="r" hint-placeholder-count="4">
+                <div style="{{ r.rowStyle }}" onClick="{{ r.onSelect }}">
+                  <div><span style="{{ r.catBadgeStyle }}">{{ r.catLabel }}</span></div>
+                  <div style="font-weight:600;color:oklch(0.25 0.012 255)">{{ r.name }}</div>
+                  <div style="text-align:right;font-weight:700">{{ r.priceLabel }}</div>
+                  <div style="color:oklch(0.5 0.012 255)">{{ r.unitLabel }}</div>
+                  <div style="text-align:center;color:oklch(0.5 0.14 255);font-weight:700">수정</div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ settingsNoRows }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:24px;text-align:center;color:oklch(0.6 0.012 255);font-size:13px">등록된 항목이 없습니다.</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ settingsIsVatTab }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ settingsCardStyle }}max-width:440px">
+            <div style="{{ settingsCardTitleStyle }}">부가세(VAT) 설정</div>
+            <div style="padding:16px 14px;display:flex;align-items:center;gap:10px">
+              <span style="font-size:13px;font-weight:600;color:oklch(0.3 0.012 255)">부가세율</span>
+              <input style="{{ settingsInputStyle }}width:100px;text-align:right" value="{{ settingsVatValue }}" onChange="{{ onVatChange }}">
+              <span style="font-size:13px;color:oklch(0.5 0.012 255)">%</span>
+            </div>
+            <div style="padding:0 14px 16px;font-size:11.5px;color:oklch(0.6 0.012 255);line-height:1.5">모든 청구 금액의 공급가액에 이 비율을 적용해 부가세·VAT포함 합계를 계산합니다.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ settingsIsCompanyTab }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ settingsCardStyle }}max-width:560px">
+            <div style="{{ settingsCardTitleStyle }}">업체 설정 (자사 정보)</div>
+            <div style="padding:16px 14px;display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ companyFields }}" as="f" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center">
+                  <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">{{ f.label }}</div>
+                  <input style="{{ settingsInputStyle }}" value="{{ f.value }}" onChange="{{ f.onChange }}">
+                </div>
+              </sc-for>
+              <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                <button style="{{ settingsAddBtnStyle }}" onClick="{{ saveCompanySettings }}">저장</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ settingsIsAccountTab }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ settingsCardStyle }}max-width:680px">
+            <div style="{{ settingsCardTitleStyle }}display:flex;align-items:center;justify-content:space-between">
+              <span>로그인 계정 설정</span>
+              <button style="background:#fff;color:oklch(0.34 0.07 260);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer" onClick="{{ onAddAccount }}">+ 계정 추가</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 100px 80px 70px;gap:8px;padding:10px 14px;font-size:11.5px;font-weight:700;color:oklch(0.5 0.012 255);border-bottom:1px solid oklch(0.9 0.006 250);background:oklch(0.97 0.004 250)"><div>로그인 ID</div><div>이름</div><div>권한</div><div>상태</div><div style="text-align:center">선택</div></div>
+            <sc-for list="{{ accountTableRows }}" as="a" hint-placeholder-count="3">
+              <div style="{{ a.rowStyle }}" onClick="{{ a.onSelect }}">
+                <div style="font-weight:600;color:oklch(0.25 0.012 255)">{{ a.loginId }}</div>
+                <div>{{ a.name }}</div>
+                <div><span style="{{ a.roleBadgeStyle }}">{{ a.role }}</span></div>
+                <div style="{{ a.statusStyle }}">{{ a.statusLabel }}</div>
+                <div style="text-align:center;color:oklch(0.5 0.14 255);font-weight:700">수정</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ accountModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;background:rgba(20,20,30,0.45);display:flex;align-items:center;justify-content:center;z-index:50" onClick="{{ closeAccountModal }}">
+      <div style="background:#fff;border-radius:14px;width:420px;max-width:92vw;padding:24px 26px;box-shadow:0 24px 64px rgba(0,0,0,.3)" onClick="{{ stopPropagation }}">
+        <div style="font-size:15px;font-weight:800;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid oklch(0.92 0.004 250)">로그인 계정 {{ accountModalTitle }}</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center">
+            <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">로그인 ID</div>
+            <input style="{{ settingsInputStyle }}" value="{{ accountDraft.loginId }}" onChange="{{ onAccLoginId }}">
+          </div>
+          <div style="display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center">
+            <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">이름</div>
+            <input style="{{ settingsInputStyle }}" value="{{ accountDraft.name }}" onChange="{{ onAccName }}">
+          </div>
+          <div style="display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center">
+            <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">권한</div>
+            <select style="{{ settingsInputStyle }}" value="{{ accountDraft.role }}" onChange="{{ onAccRole }}">
+              <option value="관리자">관리자</option>
+              <option value="영업">영업</option>
+              <option value="CS">CS</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center">
+            <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">상태</div>
+            <select style="{{ settingsInputStyle }}" value="{{ accountDraft.active }}" onChange="{{ onAccActive }}">
+              <option value="true">사용</option>
+              <option value="false">중지</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
+          <sc-if value="{{ accountCanDelete }}" hint-placeholder-val="{{ false }}">
+            <button style="{{ removeRowBtnStyle }}" onClick="{{ deleteAccount }}">삭제</button>
+          </sc-if>
+          <div style="display:flex;gap:8px;margin-left:auto">
+            <button style="{{ ghostBtnStyle }}" onClick="{{ closeAccountModal }}">취소</button>
+            <button style="{{ modalDoneBtnStyle }}" onClick="{{ saveAccount }}">저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ settingsEditOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;background:rgba(20,20,30,0.45);display:flex;align-items:center;justify-content:center;z-index:50" onClick="{{ cancelEditSetting }}">
+      <div style="background:#fff;border-radius:14px;width:420px;max-width:92vw;padding:24px 26px;box-shadow:0 24px 64px rgba(0,0,0,.3)" onClick="{{ stopPropagation }}">
+        <div style="font-size:15px;font-weight:800;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid oklch(0.92 0.004 250)">설정 항목 수정</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center">
+            <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">항목명</div>
+            <input style="{{ settingsInputStyle }}" value="{{ editDraft.name }}" onChange="{{ onEditName }}">
+          </div>
+          <div style="display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center">
+            <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">단가(원)</div>
+            <input style="{{ settingsInputStyle }}" value="{{ editDraft.price }}" onChange="{{ onEditPrice }}">
+          </div>
+          <sc-if value="{{ settingsEditIsUsage }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center">
+              <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">단위</div>
+              <input style="{{ settingsInputStyle }}" value="{{ editDraft.unit }}" onChange="{{ onEditUnit }}">
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
+          <button style="{{ removeRowBtnStyle }}" onClick="{{ deleteSettingItem }}">삭제</button>
+          <div style="display:flex;gap:8px">
+            <button style="{{ ghostBtnStyle }}" onClick="{{ cancelEditSetting }}">취소</button>
+            <button style="{{ modalDoneBtnStyle }}" onClick="{{ saveEditSetting }}">저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isMenuContractService }}" hint-placeholder-val="{{ false }}">
+    <div>
+    <div style="height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
+      <div style="font-size:16px;font-weight:700">기본계약서비스 관리</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;font-weight:600;color:oklch(0.5 0.012 255)">검색월</span>
+        <select style="{{ monthSelectStyle }}" value="{{ csSearchIdx }}" onChange="{{ onCsSearchMonthChange }}">
+          <sc-for list="{{ csSearchMonthOptions }}" as="cm" hint-placeholder-count="3">
+            <option value="{{ cm.value }}">{{ cm.label }}</option>
+          </sc-for>
+        </select>
+        <span style="font-size:11.5px;color:oklch(0.6 0.012 255)">(전월까지 검색 가능)</span>
+      </div>
+    </div>
+
+    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 20px;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250);flex-wrap:nowrap;overflow-x:auto">
+      <select style="{{ filterSelectStyle }}" value="{{ csFilterService }}" onChange="{{ onCsFilterServiceChange }}">
+        <option value="전체">서비스명 전체</option>
+        <option value="TalkCRM">TalkCRM</option>
+        <option value="SoftCRM">SoftCRM</option>
+        <option value="TalkCTI">TalkCTI</option>
+        <option value="SoftCTI">SoftCTI</option>
+        <option value="네이버예약">네이버예약</option>
+        <option value="온라인예약">온라인예약</option>
+        <option value="AI옴니채널">AI옴니채널</option>
+      </select>
+      <select style="{{ filterSelectStyle }}" value="{{ csFilterIssueDay }}" onChange="{{ onCsFilterIssueDayChange }}">
+        <option value="전체">발행일 전체</option>
+        <option value="1일">1일</option>
+        <option value="5일">5일</option>
+        <option value="9일">9일</option>
+        <option value="10일">10일</option>
+        <option value="15일">15일</option>
+        <option value="20일">20일</option>
+      </select>
+      <select style="{{ filterSelectStyle }}" value="{{ csFilterBillingDay }}" onChange="{{ onCsFilterBillingDayChange }}">
+        <option value="전체">청구일 전체</option>
+        <option value="5일">5일</option>
+        <option value="10일">10일</option>
+        <option value="15일">15일</option>
+        <option value="20일">20일</option>
+        <option value="25일">25일</option>
+      </select>
+      <div style="flex:1"></div>
+      <button style="{{ searchBtnStyle }}" onClick="{{ onCsSearch }}">검색</button>
+      <button style="{{ ghostBtnStyle }}" onClick="{{ onCsReset }}">초기화</button>
+    </div>
+
+    <div style="height:282px;flex-shrink:0;overflow:auto;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250)">
+      <div>
+        <div style="{{ csTableHeaderStyle }}">
+          <sc-for list="{{ csTableHeaderCells }}" as="h" hint-placeholder-count="8">
+            <div style="{{ h.cellStyle }}" onClick="{{ h.onClick }}">
+              <span>{{ h.label }}</span>
+              <span style="{{ h.arrowStyle }}">{{ h.arrow }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <sc-for list="{{ csTableRows }}" as="cr" hint-placeholder-count="4">
+          <div style="{{ cr.rowStyle }}" onClick="{{ cr.onSelect }}">
+            <div style="{{ cr.changeTypeStyle }}">{{ cr.changeType }}</div>
+            <div>{{ cr.registerCompany }}</div>
+            <div>{{ cr.regDate }}</div>
+            <div>{{ cr.bizNo }}</div>
+            <div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ cr.name }}</div>
+            <div>{{ cr.serviceName }}</div>
+            <div style="{{ cr.billAmountStyle }}">{{ cr.billAmount }}</div>
+            <div>{{ cr.billingDay }}</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ csNoRows }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:36px;text-align:center;color:oklch(0.6 0.012 255);font-size:13px">해당 검색월에 기본계약서비스 등록/변경 이력이 있는 거래처가 없습니다.</div>
+        </sc-if>
+      </div>
+    </div>
+
+    <div style="height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid oklch(0.9 0.006 250);font-size:12px;color:oklch(0.5 0.012 255)">
+      <div>전체 {{ csTotalCount }}건</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-weight:600;color:oklch(0.35 0.012 255)">아래 거래처 정보 청구월</span>
+        <select style="{{ monthSelectStyle }}" value="{{ detailMonthIdx }}" onChange="{{ onDetailMonthChange }}">
+          <sc-for list="{{ detailMonthOptions }}" as="dm" hint-placeholder-count="3">
+            <option value="{{ dm.value }}">{{ dm.label }}</option>
+          </sc-for>
+        </select>
+      </div>
+    </div>
+    </div>
+    </sc-if>
+
+    <div style="{{ bottomSectionStyle }}">
 
       <div style="width: 287px; flex-shrink: 0; padding: 18px; background: #fff; border-right: 1px solid oklch(0.9 0.006 250); border-width: 0px">
         <sc-if value="{{ hasSelected }}" hint-placeholder-val="{{ true }}">
@@ -235,7 +559,7 @@
         <div style="padding:18px 20px">
 
           <sc-if value="{{ isTabContract }}" hint-placeholder-val="{{ true }}">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
 
               <div style="{{ panelStyle }}">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -305,9 +629,9 @@
                   <span style="{{ panelTitleStyle }}">청구월청구비: {{ selected.grandTotalLabel }} <span style="font-weight:500;color:oklch(0.55 0.012 255)">(VAT포함)</span> <span style="{{ selected.statusTagStyle }}">{{ selected.status }}</span> <span style="{{ selected.paymentTagStyle }}">{{ selected.paymentStatus }}</span></span>
                   <button style="{{ tinyBtnStyle }}" onClick="{{ onRegisterAccounting }}">이카운터등록</button>
                 </div>
-                <div style="{{ miniTableHeaderStyle4b }}"><div>서비스명</div><div>구분</div><div>단가</div><div>수량</div><div style="text-align:right">청구비</div></div>
+                <div style="{{ miniTableHeaderStyle4d }}"><div>서비스명</div><div>단가</div><div>수량</div><div style="text-align:right">공급가액</div><div style="text-align:right">부가세</div><div style="text-align:right">VAT포함</div></div>
                 <sc-for list="{{ selected.billLines }}" as="bl" hint-placeholder-count="5">
-                  <div style="{{ miniRowStyle4b }}"><div>{{ bl.name }}</div><div>{{ bl.type }}</div><div>{{ bl.unit }}</div><div>{{ bl.qty }}</div><div style="text-align:right;font-weight:700">{{ bl.amount }}</div></div>
+                  <div style="{{ miniRowStyle4d }}"><div>{{ bl.name }}</div><div>{{ bl.unit }}</div><div>{{ bl.qty }}</div><div style="text-align:right">{{ bl.supplyLabel }}</div><div style="text-align:right">{{ bl.vatLabel }}</div><div style="text-align:right;font-weight:700">{{ bl.amount }}</div></div>
                 </sc-for>
               </div>
 
@@ -527,7 +851,12 @@
         <div style="margin-top:16px;padding-top:14px;border-top:1px dashed oklch(0.85 0.006 250)">
           <div style="font-size:12px;font-weight:700;color:oklch(0.4 0.012 255);margin-bottom:8px">서비스 추가</div>
           <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;margin-bottom:8px">
-            <input style="{{ modalInputStyle }}" placeholder="서비스명" value="{{ newSvcName }}" onChange="{{ onNewSvcNameChange }}">
+            <select style="{{ modalInputStyle }}" value="{{ newSvcName }}" onChange="{{ onNewSvcNameChange }}">
+              <option value="">서비스명 선택</option>
+              <sc-for list="{{ serviceCatalogOptions }}" as="sc" hint-placeholder-count="7">
+                <option value="{{ sc.name }}">{{ sc.name }}</option>
+              </sc-for>
+            </select>
             <input style="{{ modalInputStyle }}" placeholder="구축비" value="{{ newSvcSetup }}" onChange="{{ onNewSvcSetupChange }}">
             <input style="{{ modalInputStyle }}" placeholder="월사용료" value="{{ newSvcMonthly }}" onChange="{{ onNewSvcMonthlyChange }}">
           </div>
@@ -557,15 +886,15 @@
           <button style="{{ modalStackedBtnStyle }}" onClick="{{ closeUsageModal }}">닫기</button>
 
           <div style="font-size:13px;font-weight:600;color:oklch(0.35 0.012 255)">단위</div>
-          <input style="{{ modalFieldInputStyle }}" value="{{ usageForm.unit }}" onChange="{{ onUsageFormUnitChange }}"></input>
+          <input style="{{ modalFieldInputStyle }}" value="{{ usageForm.unit }}" onChange="{{ onUsageFormUnitChange }}">
           <button style="{{ modalStackedBtnStyle }}" onClick="{{ saveUsageService }}">저장</button>
 
           <div style="font-size:13px;font-weight:600;color:oklch(0.35 0.012 255)">단가 (원)</div>
-          <input style="{{ modalFieldInputStyle }}" value="{{ usageForm.price }}" onChange="{{ onUsageFormPriceChange }}"></input>
+          <input style="{{ modalFieldInputStyle }}" value="{{ usageForm.price }}" onChange="{{ onUsageFormPriceChange }}">
           <button style="{{ modalStackedBtnStyle }}" onClick="{{ saveUsageServiceAndAddMore }}">저장후 추가</button>
 
           <div style="font-size:13px;font-weight:600;color:oklch(0.35 0.012 255)">비고</div>
-          <input style="{{ modalFieldInputStyle }}" value="{{ usageForm.note }}" onChange="{{ onUsageFormNoteChange }}"></input>
+          <input style="{{ modalFieldInputStyle }}" value="{{ usageForm.note }}" onChange="{{ onUsageFormNoteChange }}">
           <div></div>
 
         </div>
@@ -597,11 +926,11 @@
           <button style="{{ modalStackedBtnStyle }}" onClick="{{ saveLicenseChange }}">저장</button>
 
           <div style="font-size:13px;font-weight:600;color:oklch(0.35 0.012 255)">수량</div>
-          <input style="{{ modalFieldInputStyle }}" value="{{ licenseForm.qty }}" onChange="{{ onLicenseFormQtyChange }}"></input>
+          <input style="{{ modalFieldInputStyle }}" value="{{ licenseForm.qty }}" onChange="{{ onLicenseFormQtyChange }}">
           <div></div>
 
           <div style="font-size:13px;font-weight:600;color:oklch(0.35 0.012 255)">등록사유</div>
-          <input style="{{ modalFieldInputStyle }}" value="{{ licenseForm.reason }}" onChange="{{ onLicenseFormReasonChange }}"></input>
+          <input style="{{ modalFieldInputStyle }}" value="{{ licenseForm.reason }}" onChange="{{ onLicenseFormReasonChange }}">
           <div></div>
 
         </div>
@@ -617,35 +946,35 @@
 
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">담당자</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.contact }}" onChange="{{ onInfoContactChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.contact }}" onChange="{{ onInfoContactChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">연락처</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.phone }}" onChange="{{ onInfoPhoneChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.phone }}" onChange="{{ onInfoPhoneChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">이메일</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.email }}" onChange="{{ onInfoEmailChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.email }}" onChange="{{ onInfoEmailChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">주소</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.address }}" onChange="{{ onInfoAddressChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.address }}" onChange="{{ onInfoAddressChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">병원구분</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.businessType }}" onChange="{{ onInfoBusinessTypeChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.businessType }}" onChange="{{ onInfoBusinessTypeChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">발행일</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.issueDay }}" onChange="{{ onInfoIssueDayChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.issueDay }}" onChange="{{ onInfoIssueDayChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">청구일</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.billingDay }}" onChange="{{ onInfoBillingDayChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.billingDay }}" onChange="{{ onInfoBillingDayChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255)">CMS 정보</div>
-            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.cms }}" onChange="{{ onInfoCmsChange }}"></input>
+            <input style="{{ modalFieldInputStyle }}" value="{{ infoForm.cms }}" onChange="{{ onInfoCmsChange }}">
           </div>
           <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:flex-start">
             <div style="font-size:12.5px;font-weight:600;color:oklch(0.4 0.012 255);padding-top:9px">특이사항</div>
@@ -693,18 +1022,155 @@ class Component extends DCLogic {
     infoForm: {},
     companyInfoOverrides: {},
     activeMenu: '거래처관리',
-    licenseSearchIdx: 10,
-    licFilterProduct: '전체',
+    sortKey: null,
+    sortDir: 'asc',
+    licSortKey: null,
+    licSortDir: 'asc',
+    licenseSearchIdx: 10,    licFilterProduct: '전체',
     licFilterIssueDay: '전체',
     licFilterBillingDay: '전체',
-    detailMonthIdx: 11
+    detailMonthIdx: 11,
+    csSearchIdx: 10,
+    csFilterService: '전체',
+    csFilterIssueDay: '전체',
+    csFilterBillingDay: '전체',
+    csSortKey: null,
+    csSortDir: 'asc',
+    usageCheckLastSearch: '2026-07-09',
+    ucSortKey: null,
+    ucSortDir: 'asc',
+    settingsData: null,
+    vatPercent: '10',
+    newItem: { product: { name: '', price: '' }, addon: { name: '', price: '' }, usage: { name: '', price: '', unit: 'EA' } },
+    selectedSetting: null,
+    editDraft: { name: '', price: '', unit: '' },
+    settingsTab: '상품서비스',
+    companySettings: {
+      companyName: '(주)토크CRM',
+      bizNo: '123-45-67890',
+      ceo: '김대표',
+      address: '서울시 강남구 테헤란로 501',
+      mainPhone: '02-1544-0000',
+      taxEmail: 'tax@talkcrm.com'
+    },
+    accounts: [
+      { id: 'acc1', loginId: 'admin', name: '김승찬', role: '관리자', active: true },
+      { id: 'acc2', loginId: 'sales01', name: '박서준', role: '영업', active: true },
+      { id: 'acc3', loginId: 'cs01', name: '이수아', role: 'CS', active: false }
+    ],
+    accountModalOpen: false,
+    accountDraft: null
   };
 
+  setSettingsTab = (tab) => () => this.setState({ settingsTab: tab, selectedSetting: null });
+  onCompanySettingChange = (field) => (e) => {
+    const val = e.target.value;
+    this.setState(s => ({ companySettings: { ...s.companySettings, [field]: val } }));
+  };
+  openAccountModal = (id) => () => {
+    const acc = id ? this.state.accounts.find(a => a.id === id) : { id: null, loginId: '', name: '', role: '영업', active: true };
+    this.setState({ accountModalOpen: true, accountDraft: { ...acc } });
+  };
+  onAccountDraftChange = (field) => (e) => {
+    const val = field === 'active' ? (e.target.value === 'true') : e.target.value;
+    this.setState(s => ({ accountDraft: { ...s.accountDraft, [field]: val } }));
+  };
+  saveAccount = () => {
+    const d = this.state.accountDraft;
+    if (!d || !d.loginId.trim()) { this.flashToast('로그인 ID를 입력하세요.'); return; }
+    this.setState(s => {
+      let accounts;
+      if (d.id) accounts = s.accounts.map(a => a.id === d.id ? { ...d } : a);
+      else accounts = [...s.accounts, { ...d, id: 'acc-' + Date.now() }];
+      return { accounts, accountModalOpen: false };
+    });
+    this.flashToast('계정이 저장되었습니다.');
+  };
+  deleteAccount = () => {
+    const d = this.state.accountDraft;
+    this.setState(s => ({ accounts: s.accounts.filter(a => a.id !== d.id), accountModalOpen: false }));
+    this.flashToast('계정이 삭제되었습니다.');
+  };
+  closeAccountModal = () => this.setState({ accountModalOpen: false });
+
+  buildSettingsData = () => ({
+    product: Object.keys(this.catalog.productPrice).map((k, i) => ({ id: 'p' + i + '-' + Date.now(), name: k, price: this.catalog.productPrice[k] })),
+    addon: Object.keys(this.catalog.addonPrice).map((k, i) => ({ id: 'a' + i + '-' + Date.now(), name: k, price: this.catalog.addonPrice[k] })),
+    usage: Object.keys(this.catalog.usagePrice).map((k, i) => ({ id: 'u' + i + '-' + Date.now(), name: k, price: this.catalog.usagePrice[k], unit: this.catalog.usageUnitLabel[k] || 'EA' }))
+  });
+
+  applyCatalogFromSettings = (data) => {
+    this.catalog.productPrice = Object.fromEntries(data.product.map(i => [i.name, Number(i.price) || 0]));
+    this.catalog.addonPrice = Object.fromEntries(data.addon.map(i => [i.name, Number(i.price) || 0]));
+    this.catalog.usagePrice = Object.fromEntries(data.usage.map(i => [i.name, Number(i.price) || 0]));
+    this.catalog.usageUnitLabel = Object.fromEntries(data.usage.map(i => [i.name, i.unit || 'EA']));
+  };
+
+  openSettings = () => {
+    this.setState({ activeMenu: '설정관리', settingsData: this.buildSettingsData(), vatPercent: String(Math.round(this.vatRate * 100)), selectedSetting: null });
+  };
+  onNewItemChange = (cat, field) => (e) => {
+    const val = e.target.value;
+    this.setState(s => ({ newItem: { ...s.newItem, [cat]: { ...s.newItem[cat], [field]: val } } }));
+  };
+  addSettingItem = (cat) => () => {
+    const ni = this.state.newItem[cat];
+    if (!ni.name.trim()) { this.flashToast('항목명을 입력하세요.'); return; }
+    const item = cat === 'usage'
+      ? { id: cat + '-' + Date.now(), name: ni.name.trim(), price: Number(ni.price) || 0, unit: ni.unit || 'EA' }
+      : { id: cat + '-' + Date.now(), name: ni.name.trim(), price: Number(ni.price) || 0 };
+    this.setState(s => {
+      const data = { ...s.settingsData, [cat]: [...s.settingsData[cat], item] };
+      this.applyCatalogFromSettings(data);
+      return { settingsData: data, newItem: { ...s.newItem, [cat]: { name: '', price: '', unit: 'EA' } } };
+    });
+    this.flashToast('항목이 추가되었습니다.');
+  };
+  selectSetting = (cat, id) => () => {
+    const item = this.state.settingsData[cat].find(i => i.id === id);
+    this.setState({ selectedSetting: { cat, id }, editDraft: { name: item.name, price: String(item.price), unit: item.unit || 'EA' } });
+  };
+  onEditDraftChange = (field) => (e) => {
+    const val = e.target.value;
+    this.setState(s => ({ editDraft: { ...s.editDraft, [field]: val } }));
+  };
+  saveEditSetting = () => {
+    const { selectedSetting, editDraft } = this.state;
+    if (!selectedSetting) return;
+    const { cat, id } = selectedSetting;
+    this.setState(s => {
+      const data = { ...s.settingsData, [cat]: s.settingsData[cat].map(i => i.id === id ? { ...i, name: editDraft.name.trim() || i.name, price: Number(editDraft.price) || 0, unit: editDraft.unit || 'EA' } : i) };
+      this.applyCatalogFromSettings(data);
+      return { settingsData: data, selectedSetting: null };
+    });
+    this.flashToast('항목이 수정되었습니다.');
+  };
+  deleteSettingItem = () => {
+    const { selectedSetting } = this.state;
+    if (!selectedSetting) return;
+    const { cat, id } = selectedSetting;
+    this.setState(s => {
+      const data = { ...s.settingsData, [cat]: s.settingsData[cat].filter(i => i.id !== id) };
+      this.applyCatalogFromSettings(data);
+      return { settingsData: data, selectedSetting: null };
+    });
+    this.flashToast('항목이 삭제되었습니다.');
+  };
+  cancelEditSetting = () => this.setState({ selectedSetting: null });
+  onVatChange = (e) => {
+    const val = e.target.value;
+    this.vatRate = (Number(val) || 0) / 100;
+    this.setState({ vatPercent: val });
+  };
+
+  onSearchUsageCheck = () => this.setState({ usageCheckLastSearch: '2026-07-10' });
+
   setMenu = (menu) => {
-    this.setState(s => ({
-      activeMenu: menu,
-      detailMonthIdx: menu === '거래처관리' ? 11 : Math.min(11, s.licenseSearchIdx + 1)
-    }));
+    this.setState(s => {
+      let detailMonthIdx = 11;
+      if (menu === '라이선스관리') detailMonthIdx = Math.min(11, s.licenseSearchIdx + 1);
+      else if (menu === '기본계약서비스관리') detailMonthIdx = Math.min(11, s.csSearchIdx + 1);      return { activeMenu: menu, detailMonthIdx };
+    });
   };
 
   openInfoModal = () => {
@@ -833,7 +1299,6 @@ class Component extends DCLogic {
       newSvcName: '', newSvcSetup: '', newSvcMonthly: ''
     }));
   };
-
   months = (() => {
     const arr = [];
     for (let i = 11; i >= 0; i--) {
@@ -849,6 +1314,17 @@ class Component extends DCLogic {
     usagePrice: { SMS: 20, LMS: 35, MMS: 150, '카카오알림톡': 15 },
     usageUnitLabel: { SMS: 'EA', LMS: 'EA', MMS: 'EA', '카카오알림톡': 'EA' },
     usageBase: { SMS: 1200, LMS: 250, MMS: 40, '카카오알림톡': 900 }
+  };
+
+  vatRate = 0.1;
+
+  serviceCatalog = {
+    TalkCRM: { setupFee: 100000, monthlyFee: 15000 },    SoftCRM: { setupFee: 100000, monthlyFee: 18000 },
+    TalkCTI: { setupFee: 150000, monthlyFee: 40000 },
+    SoftCTI: { setupFee: 150000, monthlyFee: 40000 },
+    '네이버예약': { setupFee: 0, monthlyFee: 20000 },
+    '온라인예약': { setupFee: 0, monthlyFee: 30000 },
+    'AI옴니채널': { setupFee: 0, monthlyFee: 10000 }
   };
 
   // 라이선스 관리 화면 전용 이벤트 로그 (거래처당 여러 건 발생 가능하도록 별도 관리)
@@ -868,6 +1344,53 @@ class Component extends DCLogic {
     { companyId: 'c13', monthIdx: 9, regDate: '2026-05-14', qty: 1, regType: '추가' },
     { companyId: 'c14', monthIdx: 9, regDate: '2026-05-20', qty: 1, regType: '무료' },
     { companyId: 'c2', monthIdx: 11, regDate: '2026-07-02', qty: 1, regType: '추가' }
+  ];
+
+  // 기본계약서비스 관리 화면 전용 이벤트 로그 (서비스 추가/삭제/수정 이력)
+  serviceChangeEvents = [
+    { companyId: 'c1', monthIdx: 10, regDate: '2026-06-02', serviceName: '네이버예약', changeType: '추가', monthlyFee: 20000 },
+    { companyId: 'c3', monthIdx: 10, regDate: '2026-06-06', serviceName: 'AI옴니채널', changeType: '추가', monthlyFee: 10000 },
+    { companyId: 'c4', monthIdx: 10, regDate: '2026-06-09', serviceName: 'RF시스템', changeType: '삭제', monthlyFee: 50000 },
+    { companyId: 'c5', monthIdx: 10, regDate: '2026-06-14', serviceName: 'CTI시스템', changeType: '수정', monthlyFee: 45000 },
+    { companyId: 'c7', monthIdx: 10, regDate: '2026-06-19', serviceName: '온라인예약', changeType: '추가', monthlyFee: 30000 },
+    { companyId: 'c9', monthIdx: 10, regDate: '2026-06-23', serviceName: 'TalkCTI', changeType: '추가', monthlyFee: 40000 },
+    { companyId: 'c11', monthIdx: 10, regDate: '2026-06-26', serviceName: '네이버예약', changeType: '삭제', monthlyFee: 20000 },
+    { companyId: 'c13', monthIdx: 9, regDate: '2026-05-16', serviceName: 'SoftCTI', changeType: '추가', monthlyFee: 40000 },
+    { companyId: 'c2', monthIdx: 11, regDate: '2026-07-03', serviceName: 'AI옴니채널', changeType: '추가', monthlyFee: 10000 }
+  ];
+
+  // 종량제 서비스 확인 화면 전용 샘플 거래처 리스트 (30건)
+  usageCheckCompanies = [
+    { name: '그린뷰티클리닉', bizNo: '128-86-23451', product: 'TalkCRM' },
+    { name: '스마일치과', bizNo: '220-81-55210', product: 'SoftCRM' },
+    { name: '헤어스튜디오 온', bizNo: '305-12-77821', product: 'TalkCRM' },
+    { name: '필라테스랩', bizNo: '411-23-99887', product: 'EasyCRM' },
+    { name: '웰니스피부과', bizNo: '501-45-33221', product: 'TalkCRM' },
+    { name: '리본네일아트', bizNo: '602-56-11223', product: 'EasyCRM' },
+    { name: '뷰티라인성형외과', bizNo: '901-89-11122', product: 'TalkCRM' },
+    { name: '하늘안과', bizNo: '104-81-22331', product: 'SoftCRM' },
+    { name: '미소한의원', bizNo: '215-90-44556', product: 'TalkCRM' },
+    { name: '바디라인휘트니스', bizNo: '703-67-22334', product: 'SoftCRM' },
+    { name: '연세정형외과', bizNo: '128-90-33445', product: 'TalkCRM' },
+    { name: '더클래식헤어샵', bizNo: '306-45-77889', product: 'EasyCRM' },
+    { name: '해피펫동물병원', bizNo: '512-33-99001', product: 'SoftCRM' },
+    { name: '실크스킨클리닉', bizNo: '221-77-55443', product: 'TalkCRM' },
+    { name: '드림요가필라테스', bizNo: '609-12-88776', product: 'EasyCRM' },
+    { name: '한빛치과교정', bizNo: '134-56-90123', product: 'SoftCRM' },
+    { name: '보스톤네일살롱', bizNo: '245-89-11234', product: 'TalkCRM' },
+    { name: '아이엠성형외과', bizNo: '317-90-45678', product: 'TalkCRM' },
+    { name: '무지개소아과', bizNo: '408-12-90876', product: 'SoftCRM' },
+    { name: '금강한방병원', bizNo: '521-34-56712', product: 'EasyCRM' },
+    { name: '뷰티풀피부과', bizNo: '112-45-98765', product: 'TalkCRM' },
+    { name: '스타일리쉬헤어', bizNo: '204-67-34521', product: 'EasyCRM' },
+    { name: '헬로우키즈치과', bizNo: '903-91-33344', product: 'TalkCRM' },
+    { name: '온고을한의원', bizNo: '317-55-88112', product: 'SoftCRM' },
+    { name: '365데이케어의원', bizNo: '456-23-77012', product: 'TalkCRM' },
+    { name: '뷰티스파왁싱', bizNo: '128-77-90345', product: 'EasyCRM' },
+    { name: '건강한이비인후과', bizNo: '609-33-45890', product: 'SoftCRM' },
+    { name: '라온필라테스센터', bizNo: '211-88-12456', product: 'TalkCRM' },
+    { name: '스마일정신건강의학과', bizNo: '345-90-67821', product: 'SoftCRM' },
+    { name: '엔젤스킨피부과', bizNo: '478-12-33990', product: 'TalkCRM' }
   ];
 
   companies = [
@@ -910,7 +1433,7 @@ class Component extends DCLogic {
     });
     const usageSum = usageLines.reduce((s, l) => s + l.amount, 0);
     const subtotal = productAmount + addonSum + usageSum;
-    const vat = Math.round(subtotal * 0.1);
+    const vat = Math.round(subtotal * this.vatRate);
     const total = subtotal + vat;
     return { productUnit, productAmount, addonLines, addonSum, usageLines, usageSum, subtotal, vat, total };
   }
@@ -956,13 +1479,17 @@ class Component extends DCLogic {
     const s = this.state;
     const monthOptions = this.months.map(m => ({ value: m.idx, label: m.year + '년 ' + m.month + '월' }));
 
-    const navItems = ['거래처 관리', '라이선스 관리'].map(label => {
-      const menuKey = label === '거래처 관리' ? '거래처관리' : '라이선스관리';
+    const navItems = ['거래처 관리', '라이선스 관리', '기본계약서비스 관리', '종량제 서비스 확인', '설정관리'].map(label => {
+      const menuKeyMap = { '거래처 관리': '거래처관리', '라이선스 관리': '라이선스관리', '기본계약서비스 관리': '기본계약서비스관리', '종량제 서비스 확인': '종량제서비스확인', '설정관리': '설정관리' };
+      const menuKey = menuKeyMap[label];
       const active = s.activeMenu === menuKey;
+      const clickHandler = menuKey === '설정관리' ? this.openSettings : () => this.setMenu(menuKey);
       return {
         label,
         style: { padding: '11px 20px', fontSize: '13px', fontWeight: active ? 700 : 600, color: active ? '#fff' : 'oklch(0.72 0.015 260)', background: active ? 'oklch(0.34 0.07 260)' : 'transparent', cursor: 'pointer', borderLeft: active ? '3px solid oklch(0.62 0.16 255)' : '3px solid transparent' },
-        onClick: () => this.setMenu(menuKey)
+        onClick: clickHandler,
+        subtitle: label === '종량제 서비스 확인' ? ('최근검색 ' + s.usageCheckLastSearch) : null,
+        subtitleStyle: { fontSize: '10.5px', fontWeight: 500, color: active ? 'oklch(0.85 0.03 255)' : 'oklch(0.55 0.012 260)', marginTop: '2px' }
       };
     });
 
@@ -971,8 +1498,26 @@ class Component extends DCLogic {
     if (s.filterProduct !== '전체') rows = rows.filter(c => c.product === s.filterProduct);
     if (s.filterStatus !== '전체') rows = rows.filter(c => this.getStatus(c, 11) === s.filterStatus);
 
-    const gridCols = '48px 100px minmax(130px,1.1fr) 80px 110px 90px 74px 66px 66px 74px 78px 100px 84px 74px';
+    const gridCols = '0.4fr 1.1fr 1.3fr 1fr 1.1fr 0.9fr 0.8fr 0.7fr 0.8fr 0.9fr 1.1fr 0.9fr';
     const tableHeaderStyle = { display: 'grid', gridTemplateColumns: gridCols, gap: '4px', padding: '9px 16px', fontSize: '11.5px', fontWeight: 700, color: 'oklch(0.5 0.012 255)', borderBottom: '1px solid oklch(0.9 0.006 250)', position: 'sticky', top: 0, background: '#fff', zIndex: 1, whiteSpace: 'nowrap' };
+
+    const headerDefs = [
+      { key: 'no', label: 'No.' }, { key: 'bizNo', label: '사업자번호' }, { key: 'name', label: '거래처명' }, { key: 'contact', label: '담당자' },
+      { key: 'phone', label: '연락처' }, { key: 'product', label: '계약상품' }, { key: 'billMonth', label: '청구월' }, { key: 'issueDay', label: '발행일' },
+      { key: 'billingDay', label: 'CMS청구일' }, { key: 'statusLabel', label: '청구상태' }, { key: 'amountLabel', label: '합계금액(VAT포함)' },
+      { key: 'depositStatus', label: '입금상태' }
+    ];
+    const tableHeaderCells = headerDefs.map(h => {
+      const active = s.sortKey === h.key;
+      const arrow = active ? (s.sortDir === 'asc' ? '▲' : '▼') : '⇕';
+      return {
+        key: h.key, label: h.label,
+        cellStyle: { display: 'flex', alignItems: 'center', gap: '3px', justifyContent: h.key === 'amountLabel' ? 'flex-end' : 'flex-start', cursor: 'pointer', userSelect: 'none' },
+        arrow,
+        arrowStyle: { fontSize: '9px', color: active ? 'oklch(0.5 0.16 255)' : 'oklch(0.7 0.006 250)' },
+        onClick: () => this.setState(prev => ({ sortKey: h.key, sortDir: prev.sortKey === h.key ? (prev.sortDir === 'asc' ? 'desc' : 'asc') : 'asc' }))
+      };
+    });
 
     const billMonthLabel = this.months[s.fromIdx].year + '-' + String(this.months[s.fromIdx].month).padStart(2, '0');
     const statusLabelMap = { '완료': '청구완료', '미청구': '미청구', '연체': '연체' };
@@ -984,8 +1529,6 @@ class Component extends DCLogic {
       else if (idx % 2 === 0) bg = 'oklch(0.96 0.07 95)';
       const status = this.getStatus(c, 11);
       const inv = this.computeInvoice(c, 11);
-      const cmsRand = this.hash(c.id + 'cms') % 3;
-      const cmsBilling = cmsRand === 0 ? c.billingDay : '';
       let depositStatus = '미입금';
       if (status === '완료') {
         const r = this.hash(c.id + 'dep') % 10;
@@ -995,7 +1538,7 @@ class Component extends DCLogic {
       const cInfoOv = s.companyInfoOverrides[c.id] || {};
       return {
         id: c.id, no: idx + 1, name: c.name, bizNo: c.bizNo, contact: cInfoOv.contact ?? c.contact, phone: cInfoOv.phone ?? c.phone, product: c.product,
-        billMonth: billMonthLabel, issueDay: cInfoOv.issueDay ?? c.issueDay, billingDay: cInfoOv.billingDay ?? c.billingDay, cmsBilling,
+        billMonth: billMonthLabel, issueDay: cInfoOv.issueDay ?? c.issueDay, billingDay: cInfoOv.billingDay ?? c.billingDay,
         statusLabel: statusLabelMap[status], amountLabel: this.won(inv.total), depositStatus,
         confirmedLabel: confirmed ? '확인' : '',
         rowStyle: { display: 'grid', gridTemplateColumns: gridCols, gap: '4px', padding: '9px 16px', fontSize: '12px', borderBottom: '1px solid oklch(0.95 0.003 250)', background: bg, cursor: 'pointer', alignItems: 'center', whiteSpace: 'nowrap', overflow: 'hidden' },
@@ -1013,9 +1556,9 @@ class Component extends DCLogic {
     if (s.licFilterIssueDay !== '전체') licEventRows = licEventRows.filter(ev => this.companies.find(c => c.id === ev.companyId).issueDay === s.licFilterIssueDay);
     if (s.licFilterBillingDay !== '전체') licEventRows = licEventRows.filter(ev => this.companies.find(c => c.id === ev.companyId).billingDay === s.licFilterBillingDay);
 
-    const licGridCols = '92px 72px 72px 78px 108px minmax(130px,1fr) 84px 140px 140px 60px 60px';
+    const licGridCols = '0.7fr 0.8fr 1fr 1.1fr 1fr 0.8fr 1.1fr 0.6fr';
     const regTypeColorMap = { '추가': 'oklch(0.5 0.16 25)', '무료': 'oklch(0.45 0.13 255)', '기본': 'oklch(0.45 0.012 255)', '삭제': 'oklch(0.55 0.19 25)' };
-    const licTableRows = licEventRows.map(ev => {
+    const licTableRowsRaw = licEventRows.map(ev => {
       const c = this.companies.find(cc => cc.id === ev.companyId);
       const unit = this.catalog.productPrice[c.product];
       const signedQty = ev.regType === '삭제' ? -ev.qty : ev.qty;
@@ -1024,21 +1567,209 @@ class Component extends DCLogic {
       const ctiFee = c.addons.includes('CTI시스템') ? this.catalog.addonPrice['CTI시스템'] : 0;
       const prevAmt = beforeQty * unit + ctiFee;
       const currAmt = c.licenseQty * unit + ctiFee;
+      const currAmtVat = Math.round(currAmt * (1 + this.vatRate));
       const isSelected = c.id === s.selectedCompanyId;
       const deltaColor = currAmt > prevAmt ? 'oklch(0.5 0.16 25)' : (currAmt < prevAmt ? 'oklch(0.45 0.13 255)' : 'oklch(0.25 0.012 255)');
       return {
         id: c.id, regDate: ev.regDate, qty: ev.qty, regType: ev.regType,
         registerCompany: c.registerCompany, bizNo: c.bizNo, name: c.name, product: c.product,
-        prevAmount: this.won(prevAmt) + '원', currAmount: this.won(currAmt) + '원',
-        issueDay: c.issueDay, billingDay: c.billingDay,
+        billAmountRaw: currAmtVat, billAmount: this.won(currAmtVat) + '원',
+        billingDay: c.billingDay,
         regTypeStyle: { color: regTypeColorMap[ev.regType] || 'oklch(0.3 0.012 255)', fontWeight: 700 },
-        currAmountStyle: { textAlign: 'right', fontWeight: 700, color: deltaColor },
+        billAmountStyle: { textAlign: 'right', fontWeight: 700, color: deltaColor },
         rowStyle: { display: 'grid', gridTemplateColumns: licGridCols, gap: '4px', padding: '9px 16px', fontSize: '12px', borderBottom: '1px solid oklch(0.95 0.003 250)', background: isSelected ? 'oklch(0.93 0.05 145)' : '#fff', cursor: 'pointer', alignItems: 'center', whiteSpace: 'nowrap', overflow: 'hidden' },
         onSelect: () => this.selectCompany(c.id)
       };
     });
+    const licHeaderDefs = [
+      { key: 'regType', label: '등록구분' }, { key: 'registerCompany', label: '등록업체' }, { key: 'regDate', label: '등록일자' },
+      { key: 'bizNo', label: '사업자번호' }, { key: 'name', label: '거래처명' }, { key: 'product', label: '서비스명' },
+      { key: 'billAmount', label: '청구금액(VAT포함)' }, { key: 'billingDay', label: '청구일' }
+    ];
+    const licTableHeaderCells = licHeaderDefs.map(h => {
+      const active = s.licSortKey === h.key;
+      const arrow = active ? (s.licSortDir === 'asc' ? '▲' : '▼') : '⇕';
+      return {
+        key: h.key, label: h.label,
+        cellStyle: { display: 'flex', alignItems: 'center', gap: '3px', justifyContent: h.key === 'billAmount' ? 'flex-end' : 'flex-start', cursor: 'pointer', userSelect: 'none' },
+        arrow,
+        arrowStyle: { fontSize: '9px', color: active ? 'oklch(0.5 0.16 255)' : 'oklch(0.7 0.006 250)' },
+        onClick: () => this.setState(prev => ({ licSortKey: h.key, licSortDir: prev.licSortKey === h.key ? (prev.licSortDir === 'asc' ? 'desc' : 'asc') : 'asc' }))
+      };
+    });
+    const licSortAccessors = {
+      regType: r => r.regType, registerCompany: r => r.registerCompany, regDate: r => r.regDate,
+      bizNo: r => r.bizNo, name: r => r.name, product: r => r.product,
+      billAmount: r => r.billAmountRaw, billingDay: r => parseInt(r.billingDay) || 0
+    };
+    let licTableRows = licTableRowsRaw;
+    if (s.licSortKey && licSortAccessors[s.licSortKey]) {
+      const acc = licSortAccessors[s.licSortKey];
+      licTableRows = [...licTableRowsRaw].sort((a, b) => {
+        const va = acc(a), vb = acc(b);
+        const cmp = (typeof va === 'number' && typeof vb === 'number') ? va - vb : String(va).localeCompare(String(vb), 'ko');
+        return s.licSortDir === 'desc' ? -cmp : cmp;
+      });
+    }
     const licTableHeaderStyle = { display: 'grid', gridTemplateColumns: licGridCols, gap: '4px', padding: '9px 16px', fontSize: '11.5px', fontWeight: 700, color: 'oklch(0.5 0.012 255)', borderBottom: '1px solid oklch(0.9 0.006 250)', position: 'sticky', top: 0, background: '#fff', zIndex: 1, whiteSpace: 'nowrap' };
     const detailMonthOptions = this.months.slice(1).map(m => ({ value: m.idx, label: m.year + '년 ' + m.month + '월' }));
+
+    // 기본계약서비스 관리 화면
+    const csSearchIdx = Math.min(10, s.csSearchIdx);
+    let csEventRows = this.serviceChangeEvents.filter(ev => ev.monthIdx === csSearchIdx);
+    if (s.csFilterService !== '전체') csEventRows = csEventRows.filter(ev => ev.serviceName === s.csFilterService);
+    if (s.csFilterIssueDay !== '전체') csEventRows = csEventRows.filter(ev => this.companies.find(c => c.id === ev.companyId).issueDay === s.csFilterIssueDay);
+    if (s.csFilterBillingDay !== '전체') csEventRows = csEventRows.filter(ev => this.companies.find(c => c.id === ev.companyId).billingDay === s.csFilterBillingDay);
+
+    const csGridCols = '0.7fr 0.8fr 1fr 1.1fr 1fr 0.9fr 1.1fr 0.6fr';
+    const csChangeColorMap = { '추가': 'oklch(0.5 0.16 25)', '수정': 'oklch(0.45 0.13 255)', '삭제': 'oklch(0.55 0.19 25)' };
+    const csTableRowsRaw = csEventRows.map(ev => {
+      const c = this.companies.find(cc => cc.id === ev.companyId);
+      const feeVat = Math.round(ev.monthlyFee * (1 + this.vatRate));
+      const isSelected = c.id === s.selectedCompanyId;
+      return {
+        id: c.id, regDate: ev.regDate, changeType: ev.changeType,
+        registerCompany: c.registerCompany, bizNo: c.bizNo, name: c.name, serviceName: ev.serviceName,
+        billAmountRaw: feeVat, billAmount: this.won(feeVat) + '원', billingDay: c.billingDay,
+        changeTypeStyle: { color: csChangeColorMap[ev.changeType] || 'oklch(0.3 0.012 255)', fontWeight: 700 },
+        billAmountStyle: { textAlign: 'right', fontWeight: 700, color: ev.changeType === '삭제' ? 'oklch(0.45 0.13 255)' : 'oklch(0.25 0.012 255)' },
+        rowStyle: { display: 'grid', gridTemplateColumns: csGridCols, gap: '4px', padding: '9px 16px', fontSize: '12px', borderBottom: '1px solid oklch(0.95 0.003 250)', background: isSelected ? 'oklch(0.93 0.05 145)' : '#fff', cursor: 'pointer', alignItems: 'center', whiteSpace: 'nowrap', overflow: 'hidden' },
+        onSelect: () => this.selectCompany(c.id)
+      };
+    });
+    const csHeaderDefs = [
+      { key: 'changeType', label: '등록구분' }, { key: 'registerCompany', label: '등록업체' }, { key: 'regDate', label: '등록일자' },
+      { key: 'bizNo', label: '사업자번호' }, { key: 'name', label: '거래처명' }, { key: 'serviceName', label: '서비스명' },
+      { key: 'billAmount', label: '청구금액(VAT포함)' }, { key: 'billingDay', label: '청구일' }
+    ];
+    const csTableHeaderCells = csHeaderDefs.map(h => {
+      const active = s.csSortKey === h.key;
+      const arrow = active ? (s.csSortDir === 'asc' ? '▲' : '▼') : '⇕';
+      return {
+        key: h.key, label: h.label,
+        cellStyle: { display: 'flex', alignItems: 'center', gap: '3px', justifyContent: h.key === 'billAmount' ? 'flex-end' : 'flex-start', cursor: 'pointer', userSelect: 'none' },
+        arrow,
+        arrowStyle: { fontSize: '9px', color: active ? 'oklch(0.5 0.16 255)' : 'oklch(0.7 0.006 250)' },
+        onClick: () => this.setState(prev => ({ csSortKey: h.key, csSortDir: prev.csSortKey === h.key ? (prev.csSortDir === 'asc' ? 'desc' : 'asc') : 'asc' }))
+      };
+    });
+    const csSortAccessors = {
+      changeType: r => r.changeType, registerCompany: r => r.registerCompany, regDate: r => r.regDate,
+      bizNo: r => r.bizNo, name: r => r.name, serviceName: r => r.serviceName,
+      billAmount: r => r.billAmountRaw, billingDay: r => parseInt(r.billingDay) || 0
+    };
+    let csTableRows = csTableRowsRaw;
+    if (s.csSortKey && csSortAccessors[s.csSortKey]) {
+      const acc = csSortAccessors[s.csSortKey];
+      csTableRows = [...csTableRowsRaw].sort((a, b) => {
+        const va = acc(a), vb = acc(b);
+        const cmp = (typeof va === 'number' && typeof vb === 'number') ? va - vb : String(va).localeCompare(String(vb), 'ko');
+        return s.csSortDir === 'desc' ? -cmp : cmp;
+      });
+    }
+    const csTableHeaderStyle = { display: 'grid', gridTemplateColumns: csGridCols, gap: '4px', padding: '9px 16px', fontSize: '11.5px', fontWeight: 700, color: 'oklch(0.5 0.012 255)', borderBottom: '1px solid oklch(0.9 0.006 250)', position: 'sticky', top: 0, background: '#fff', zIndex: 1, whiteSpace: 'nowrap' };
+    const csSearchMonthOptions = this.months.slice(0, 11).map(m => ({ value: m.idx, label: m.year + '년 ' + m.month + '월' }));
+
+    // 설정관리 화면
+    const settingsData = s.settingsData || this.buildSettingsData();
+    const catMeta = { product: '상품서비스', addon: '부가서비스', usage: '종량제서비스' };
+    const catColor = { product: 'oklch(0.5 0.16 255)', addon: 'oklch(0.5 0.14 155)', usage: 'oklch(0.55 0.16 40)' };
+    const settingsTabDefs = ['상품서비스', '부가서비스', '종량제서비스', '부가세', '업체설정', '로그인 계정설정'];
+    const settingsTabs = settingsTabDefs.map(t => ({
+      label: t, active: s.settingsTab === t, onClick: this.setSettingsTab(t),
+      style: { padding: '10px 14px', fontSize: '12.5px', fontWeight: s.settingsTab === t ? 700 : 500, cursor: 'pointer', borderRadius: '7px', color: s.settingsTab === t ? '#fff' : 'oklch(0.4 0.012 255)', background: s.settingsTab === t ? 'oklch(0.34 0.07 260)' : 'transparent' }
+    }));
+    const tabToCat = { '상품서비스': 'product', '부가서비스': 'addon', '종량제서비스': 'usage' };
+    const activeCat = tabToCat[s.settingsTab] || null;
+    const settingsTableRows = activeCat ? settingsData[activeCat].map(item => {
+      const sel = s.selectedSetting && s.selectedSetting.cat === activeCat && s.selectedSetting.id === item.id;
+      return {
+        cat: activeCat, id: item.id, catLabel: catMeta[activeCat], name: item.name,
+        priceLabel: this.won(item.price) + '원',
+        unitLabel: activeCat === 'usage' ? ('/ ' + (item.unit || 'EA')) : '월 구독',
+        catBadgeStyle: { fontSize: '11px', fontWeight: 700, color: '#fff', background: catColor[activeCat], padding: '2px 8px', borderRadius: '10px', display: 'inline-block' },
+        rowStyle: { display: 'grid', gridTemplateColumns: '110px 1fr 130px 90px 70px', gap: '8px', alignItems: 'center', padding: '10px 14px', fontSize: '12.5px', borderBottom: '1px solid oklch(0.96 0.002 250)', background: sel ? 'oklch(0.93 0.05 255)' : '#fff', cursor: 'pointer' },
+        onSelect: this.selectSetting(activeCat, item.id)
+      };
+    }) : [];
+    const settingsActiveCard = activeCat ? {
+      cat: activeCat, title: catMeta[activeCat] + (activeCat === 'usage' ? ' 단가' : ' 월 구독단가'),
+      isUsage: activeCat === 'usage',
+      newName: s.newItem[activeCat].name, newPrice: s.newItem[activeCat].price, newUnit: s.newItem[activeCat].unit,
+      onNameChange: this.onNewItemChange(activeCat, 'name'), onPriceChange: this.onNewItemChange(activeCat, 'price'), onUnitChange: this.onNewItemChange(activeCat, 'unit'),
+      onAdd: this.addSettingItem(activeCat)
+    } : null;
+    const settingsEditOpen = !!s.selectedSetting;
+    const settingsEditIsUsage = s.selectedSetting && s.selectedSetting.cat === 'usage';
+    const settingsIsPriceTab = !!activeCat;
+    const settingsIsVatTab = s.settingsTab === '부가세';
+    const settingsIsCompanyTab = s.settingsTab === '업체설정';
+    const settingsIsAccountTab = s.settingsTab === '로그인 계정설정';
+
+    const companyFieldDefs = [
+      ['companyName', '회사명'], ['bizNo', '사업자번호'], ['ceo', '대표자명'],
+      ['address', '주소'], ['mainPhone', '대표전화'], ['taxEmail', '세금계산서 이메일']
+    ];
+    const companyFields = companyFieldDefs.map(([key, label]) => ({ key, label, value: s.companySettings[key], onChange: this.onCompanySettingChange(key) }));
+
+    const accountRoleColor = { '관리자': 'oklch(0.5 0.16 25)', '영업': 'oklch(0.5 0.16 255)', 'CS': 'oklch(0.5 0.14 155)' };
+    const accountTableRows = s.accounts.map(a => ({
+      id: a.id, loginId: a.loginId, name: a.name, role: a.role,
+      statusLabel: a.active ? '사용' : '중지',
+      roleBadgeStyle: { fontSize: '11px', fontWeight: 700, color: '#fff', background: accountRoleColor[a.role] || 'oklch(0.5 0.012 255)', padding: '2px 8px', borderRadius: '10px', display: 'inline-block' },
+      statusStyle: { fontWeight: 700, color: a.active ? 'oklch(0.45 0.13 155)' : 'oklch(0.6 0.012 255)' },
+      rowStyle: { display: 'grid', gridTemplateColumns: '1fr 1fr 100px 80px 70px', gap: '8px', alignItems: 'center', padding: '10px 14px', fontSize: '12.5px', borderBottom: '1px solid oklch(0.96 0.002 250)', cursor: 'pointer', background: '#fff' },
+      onSelect: this.openAccountModal(a.id)
+    }));
+    const accountDraft = s.accountDraft || {};
+
+    // 종량제 서비스 확인 화면
+    const usageCheckGridCols = '0.4fr 0.7fr 1fr 1fr 0.7fr 0.7fr 0.7fr 0.9fr 0.8fr';
+    const usageCheckMonthLabel = this.months[10].year + '년 ' + this.months[10].month + '월';
+    const usageCheckRowsRaw = this.usageCheckCompanies.map((u, idx) => {
+      const h = (key) => this.hash(u.bizNo + key);
+      const aiTokenRaw = 5 + (h('ai') % 40);
+      return {
+        no: idx + 1, monthLabel: usageCheckMonthLabel, bizNo: u.bizNo, name: u.name, product: u.product,
+        sms: 200 + (h('sms') % 800),
+        lms: 20 + (h('lms') % 150),
+        kakao: 300 + (h('kakao') % 1200),
+        aiTokenRaw, aiToken: aiTokenRaw + '백만토큰'
+      };
+    });
+    const usageCheckHeaderDefs = [
+      { key: 'no', label: '순서' }, { key: 'monthLabel', label: '검색월' }, { key: 'bizNo', label: '사업자번호' },
+      { key: 'name', label: '거래처명' }, { key: 'product', label: '계약상품' }, { key: 'sms', label: 'SMS수량' },
+      { key: 'lms', label: 'LMS수량' }, { key: 'kakao', label: '카카오알림톡수량' }, { key: 'aiTokenRaw', label: 'AI토큰수량' }
+    ];
+    const usageCheckHeaderCells = usageCheckHeaderDefs.map(h => {
+      const active = s.ucSortKey === h.key;
+      const arrow = active ? (s.ucSortDir === 'asc' ? '▲' : '▼') : '⇕';
+      return {
+        key: h.key, label: h.label,
+        cellStyle: { display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', userSelect: 'none' },
+        arrow,
+        arrowStyle: { fontSize: '9px', color: active ? 'oklch(0.5 0.16 255)' : 'oklch(0.7 0.006 250)' },
+        onClick: () => this.setState(prev => ({ ucSortKey: h.key, ucSortDir: prev.ucSortKey === h.key ? (prev.ucSortDir === 'asc' ? 'desc' : 'asc') : 'asc' }))
+      };
+    });
+    const usageCheckSortAccessors = {
+      no: r => r.no, monthLabel: r => r.monthLabel, bizNo: r => r.bizNo, name: r => r.name, product: r => r.product,
+      sms: r => r.sms, lms: r => r.lms, kakao: r => r.kakao, aiTokenRaw: r => r.aiTokenRaw
+    };
+    let usageCheckRowsSorted = usageCheckRowsRaw;
+    if (s.ucSortKey && usageCheckSortAccessors[s.ucSortKey]) {
+      const acc = usageCheckSortAccessors[s.ucSortKey];
+      usageCheckRowsSorted = [...usageCheckRowsRaw].sort((a, b) => {
+        const va = acc(a), vb = acc(b);
+        const cmp = (typeof va === 'number' && typeof vb === 'number') ? va - vb : String(va).localeCompare(String(vb), 'ko');
+        return s.ucSortDir === 'desc' ? -cmp : cmp;
+      });
+    }
+    const usageCheckRows = usageCheckRowsSorted.map((r, idx) => ({
+      ...r,
+      rowStyle: { display: 'grid', gridTemplateColumns: usageCheckGridCols, gap: '4px', padding: '9px 16px', fontSize: '12px', borderBottom: '1px solid oklch(0.95 0.003 250)', background: idx % 2 === 0 ? '#fff' : 'oklch(0.98 0.003 250)', alignItems: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }
+    }));
     const filterSelectStyle = { border: '1px solid oklch(0.85 0.006 250)', borderRadius: '6px', padding: '7px 10px', fontSize: '12px', background: '#fff', color: 'oklch(0.35 0.012 255)' };
     const searchBtnStyle = { background: 'oklch(0.55 0.14 255)', color: '#fff', border: 'none', borderRadius: '6px', padding: '7px 16px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
     const ghostBtnStyle = { background: '#fff', border: '1px solid oklch(0.82 0.006 250)', color: 'oklch(0.3 0.012 255)', borderRadius: '6px', padding: '7px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' };
@@ -1079,9 +1810,9 @@ class Component extends DCLogic {
     const addedAmount = addedQty * invoice.productUnit;
 
     const infoRows = [
-      ['사업자번호', companyRaw.bizNo], ['대표자명', companyRaw.ceo], ['담당자', effContact], ['연락처', effPhone],
+      ['사업자번호', companyRaw.bizNo], ['대표자명', companyRaw.ceo], ['대표전화번호', companyRaw.mainPhone || '02-' + String(1000 + this.hash(companyRaw.id + 'tel') % 9000) + '-' + String(1000 + this.hash(companyRaw.id + 'tel2') % 9000)], ['담당자', effContact], ['담당자연락처', effPhone],
       ['이메일', effEmail], ['주소', effAddress], ['계약일', companyRaw.contractDate], ['계약종료일', companyRaw.contractEndDate],
-      ['계산서발급일', companyRaw.invoiceIssueDay], ['병원구분', effBusinessType], ['발행일', effIssueDay], ['청구일', effBillingDay],
+      ['병원구분', effBusinessType], ['발행일', effIssueDay], ['CMS청구일', effBillingDay],
       ['CMS 정보', effCms], ['특이사항', effNote]
     ].map(([label, value]) => ({ label, value, rowStyle: { display: 'flex', gap: '10px', padding: '7px 0', borderBottom: '1px solid oklch(0.96 0.002 250)', alignItems: 'flex-start' } }));
 
@@ -1102,10 +1833,14 @@ class Component extends DCLogic {
 
     const licenseRows = [{ product: companyRaw.product, total: companyRaw.licenseQty, base: baseQty, free: freeQty, added: addedQty, unit: this.won(invoice.productUnit), addedAmount: this.won(addedAmount) }];
 
+    const mkBillLine = (name, unitRaw, qty, supplyRaw) => {
+      const vatRaw = Math.round(supplyRaw * this.vatRate);
+      return { name, unit: this.won(unitRaw), qty, supplyLabel: this.won(supplyRaw), vatLabel: this.won(vatRaw), amount: this.won(supplyRaw + vatRaw) };
+    };
     const billLines = [
-      { name: companyRaw.product, type: '유지', unit: this.won(invoice.productUnit), qty: companyRaw.licenseQty, amount: this.won(invoice.productAmount) },
-      ...invoice.addonLines.map(l => ({ name: l.name, type: '부가', unit: this.won(l.amount), qty: 1, amount: this.won(l.amount) })),
-      ...invoice.usageLines.map(l => ({ name: l.name, type: '종량', unit: this.won(l.unit), qty: this.won(l.qty), amount: this.won(l.amount) }))
+      mkBillLine(companyRaw.product, invoice.productUnit, companyRaw.licenseQty, invoice.productAmount),
+      ...invoice.addonLines.map(l => mkBillLine(l.name, l.amount, 1, l.amount)),
+      ...invoice.usageLines.map(l => mkBillLine(l.name, l.unit, l.qty, l.amount))
     ];
 
     const accountRows = [
@@ -1338,10 +2073,28 @@ class Component extends DCLogic {
       };
     });
 
+    const sortAccessors = {
+      no: r => r.no, bizNo: r => r.bizNo, name: r => r.name, contact: r => r.contact, phone: r => r.phone,
+      product: r => r.product, billMonth: r => r.billMonth, issueDay: r => parseInt(r.issueDay) || 0,
+      billingDay: r => parseInt(r.billingDay) || 0, statusLabel: r => r.statusLabel,
+      amountLabel: r => Number(String(r.amountLabel).replace(/[^0-9.-]/g, '')) || 0,
+      depositStatus: r => r.depositStatus, confirmedLabel: r => r.confirmedLabel
+    };
+    let sortedTableRows = tableRows;
+    if (s.sortKey && sortAccessors[s.sortKey]) {
+      const acc = sortAccessors[s.sortKey];
+      sortedTableRows = [...tableRows].sort((a, b) => {
+        const va = acc(a), vb = acc(b);
+        const cmp = (typeof va === 'number' && typeof vb === 'number') ? va - vb : String(va).localeCompare(String(vb), 'ko');
+        return s.sortDir === 'desc' ? -cmp : cmp;
+      });
+    }
+
     return {
       navItems, monthOptions,
       isMenuCompanies: s.activeMenu === '거래처관리',
       isMenuLicense: s.activeMenu === '라이선스관리',
+      isMenuContractService: s.activeMenu === '기본계약서비스관리',
       licenseSearchIdx: licSearchIdx,
       licenseMonthOptions,
       onLicenseSearchMonthChange: (e) => { const v = Number(e.target.value); this.setState({ licenseSearchIdx: v, detailMonthIdx: Math.min(11, v + 1) }); },
@@ -1353,10 +2106,62 @@ class Component extends DCLogic {
       onLicFilterBillingDayChange: (e) => this.setState({ licFilterBillingDay: e.target.value }),
       onLicSearch: () => this.flashToast('검색 조건이 적용되었습니다.'),
       onLicReset: () => this.setState({ licenseSearchIdx: 10, licFilterProduct: '전체', licFilterIssueDay: '전체', licFilterBillingDay: '전체', detailMonthIdx: 11 }),
-      licTableHeaderStyle, licTableRows,
+      licTableHeaderStyle, licTableHeaderCells, licTableRows,
       licNoRows: licTableRows.length === 0,
       licTotalCount: licTableRows.length,
-      detailMonthIdx: detailIdx,
+      csSearchIdx, csSearchMonthOptions,
+      onCsSearchMonthChange: (e) => { const v = Number(e.target.value); this.setState({ csSearchIdx: v, detailMonthIdx: Math.min(11, v + 1) }); },
+      csFilterService: s.csFilterService,
+      csFilterIssueDay: s.csFilterIssueDay,
+      csFilterBillingDay: s.csFilterBillingDay,
+      onCsFilterServiceChange: (e) => this.setState({ csFilterService: e.target.value }),
+      onCsFilterIssueDayChange: (e) => this.setState({ csFilterIssueDay: e.target.value }),
+      onCsFilterBillingDayChange: (e) => this.setState({ csFilterBillingDay: e.target.value }),
+      onCsSearch: () => this.flashToast('검색 조건이 적용되었습니다.'),
+      onCsReset: () => this.setState({ csSearchIdx: 10, csFilterService: '전체', csFilterIssueDay: '전체', csFilterBillingDay: '전체', detailMonthIdx: 11 }),
+      csTableHeaderStyle, csTableHeaderCells, csTableRows,
+      csNoRows: csTableRows.length === 0,
+      csTotalCount: csTableRows.length,
+      isMenuUsageCheck: s.activeMenu === '종량제서비스확인',
+      isMenuSettings: s.activeMenu === '설정관리',
+      settingsTabs, settingsActiveCard, settingsTableRows,
+      settingsNoRows: settingsTableRows.length === 0,
+      settingsIsPriceTab, settingsIsVatTab, settingsIsCompanyTab, settingsIsAccountTab,
+      settingsVatValue: s.vatPercent,
+      onVatChange: this.onVatChange,
+      companyFields, saveCompanySettings: () => this.flashToast('업체 정보가 저장되었습니다.'),
+      accountTableRows, onAddAccount: this.openAccountModal(null),
+      accountModalOpen: s.accountModalOpen, accountDraft,
+      accountIsNew: !accountDraft.id,
+      accountModalTitle: accountDraft.id ? '수정' : '추가',
+      accountCanDelete: !!accountDraft.id,
+      onAccLoginId: this.onAccountDraftChange('loginId'),
+      onAccName: this.onAccountDraftChange('name'),
+      onAccRole: this.onAccountDraftChange('role'),
+      onAccActive: this.onAccountDraftChange('active'),
+      saveAccount: this.saveAccount, deleteAccount: this.deleteAccount, closeAccountModal: this.closeAccountModal,
+      settingsEditOpen, settingsEditIsUsage,
+      editDraft: s.editDraft,
+      onEditName: this.onEditDraftChange('name'),
+      onEditPrice: this.onEditDraftChange('price'),
+      onEditUnit: this.onEditDraftChange('unit'),
+      saveEditSetting: this.saveEditSetting,
+      deleteSettingItem: this.deleteSettingItem,
+      cancelEditSetting: this.cancelEditSetting,
+      settingsInputStyle: { border: '1px solid oklch(0.85 0.006 250)', borderRadius: '6px', padding: '8px 10px', fontSize: '13px', color: 'oklch(0.25 0.012 255)' },
+      settingsAddBtnStyle: { background: 'oklch(0.34 0.07 260)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' },
+      settingsCardStyle: { background: '#fff', border: '1px solid oklch(0.9 0.006 250)', borderRadius: '10px', overflow: 'hidden' },
+      settingsCardTitleStyle: { fontSize: '13px', fontWeight: 700, color: '#fff', background: 'oklch(0.34 0.07 260)', padding: '11px 14px' },
+      settingsTableHeaderStyle: { display: 'grid', gridTemplateColumns: '110px 1fr 130px 90px 70px', gap: '8px', padding: '10px 14px', fontSize: '11.5px', fontWeight: 700, color: 'oklch(0.5 0.012 255)', borderBottom: '1px solid oklch(0.9 0.006 250)', background: 'oklch(0.97 0.004 250)' },
+      bottomSectionStyle: { display: (s.activeMenu === '종량제서비스확인' || s.activeMenu === '설정관리') ? 'none' : 'flex', alignItems: 'stretch', minHeight: '640px' },
+      usageCheckLastSearch: s.usageCheckLastSearch,
+      usageCheckMonthLabel,
+      usageCheckHeaderCells,
+      usageCheckGridHeaderStyle: { display: 'grid', gridTemplateColumns: usageCheckGridCols, gap: '4px', padding: '9px 16px', fontSize: '11.5px', fontWeight: 700, color: 'oklch(0.5 0.012 255)', borderBottom: '1px solid oklch(0.9 0.006 250)', position: 'sticky', top: 0, background: '#fff', zIndex: 1, whiteSpace: 'nowrap' },
+      usageCheckRows,
+      usageCheckTotalCount: usageCheckRows.length,
+      onSearchUsageCheck: this.onSearchUsageCheck,
+      onExcelUsageCheck: () => this.flashToast('엑셀 다운로드를 시작합니다.'),      detailMonthIdx: detailIdx,
       detailMonthOptions,
       onDetailMonthChange: (e) => this.setState({ detailMonthIdx: Number(e.target.value) }),
       fromIdx: s.fromIdx,
@@ -1373,7 +2178,7 @@ class Component extends DCLogic {
       onRegister: () => this.flashToast('거래처 등록 화면은 준비 중입니다.'),
       onExcel: () => this.flashToast('엑셀 다운로드를 시작합니다.'),
 
-      tableHeaderStyle, tableRows, noRows: tableRows.length === 0, totalCount: tableRows.length,
+      tableHeaderStyle, tableHeaderCells, tableRows: sortedTableRows, noRows: tableRows.length === 0, totalCount: tableRows.length,
 
       hasSelected: !!companyRaw,
       navArrowStyle, goPrevCompany: this.goPrevCompany, goNextCompany: this.goNextCompany,
@@ -1459,7 +2264,12 @@ class Component extends DCLogic {
       modalServices,
       modalNoServices: modalServices.length === 0,
       newSvcName: s.newSvcName, newSvcSetup: s.newSvcSetup, newSvcMonthly: s.newSvcMonthly,
-      onNewSvcNameChange: (e) => this.setState({ newSvcName: e.target.value }),
+      serviceCatalogOptions: Object.keys(this.serviceCatalog).map(name => ({ name })),
+      onNewSvcNameChange: (e) => {
+        const name = e.target.value;
+        const preset = this.serviceCatalog[name];
+        this.setState({ newSvcName: name, newSvcSetup: preset ? String(preset.setupFee) : '', newSvcMonthly: preset ? String(preset.monthlyFee) : '' });
+      },
       onNewSvcSetupChange: (e) => this.setState({ newSvcSetup: e.target.value }),
       onNewSvcMonthlyChange: (e) => this.setState({ newSvcMonthly: e.target.value }),
       addContractService: this.addContractService,
@@ -1476,6 +2286,8 @@ class Component extends DCLogic {
       miniRowStyle4: miniRow('1.4fr 1fr 1fr 1fr'),
       miniTableHeaderStyle4b: miniHeader('1.4fr 0.8fr 1fr 0.7fr 1fr'),
       miniRowStyle4b: miniRow('1.4fr 0.8fr 1fr 0.7fr 1fr'),
+      miniTableHeaderStyle4d: miniHeader('1.3fr 0.9fr 0.7fr 1fr 0.9fr 1fr'),
+      miniRowStyle4d: miniRow('1.3fr 0.9fr 0.7fr 1fr 0.9fr 1fr'),
       miniTableHeaderStyle4c: miniHeader('0.9fr 1fr 2.2fr 1fr'),
       miniRowStyle4c: miniRow('0.9fr 1fr 2.2fr 1fr'),
       miniTableHeaderStyle5: miniHeader('1.4fr 0.7fr 0.9fr 0.9fr 1fr'),
